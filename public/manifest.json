@@ -1,0 +1,12 @@
+{
+  "name": "Campus Triage Agent — AI Helpdesk",
+  "short_name": "Campus Triage",
+  "description": "Multi-agent AI helpdesk for campus support with semantic search, GraphRAG, voice I/O, and proactive detection.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "48x48", "type": "image/svg+xml" }
+  ]
+}
