@@ -22,7 +22,7 @@ class ProactiveDetector {
     });
 
     this.activeAlerts = [];
-    for (const [key, cluster] of Object.entries(clusters)) {
+    for (const [, cluster] of Object.entries(clusters)) {
       if (cluster.tickets.length >= INCIDENT_THRESHOLD) {
         const blockInfo = cluster.blocks.size > 0 ? ` in [${Array.from(cluster.blocks).join(', ')}]` : '';
         this.activeAlerts.push({

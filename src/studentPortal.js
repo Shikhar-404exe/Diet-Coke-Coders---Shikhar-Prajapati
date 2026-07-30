@@ -1,12 +1,4 @@
-const STORAGE_KEY = 'studentPortal';
-
-const MOCK_STUDENTS = [
-  { regNo: '22BCE1001', name: 'Arjun Sharma', program: 'BTech CSE', year: 3, hostel: 'Block A', room: '101', email: 'arjun.sharma@vitbhopal.ac.in', cgpa: 8.7 },
-  { regNo: '22BCE1002', name: 'Priya Patel', program: 'BTech CSE', year: 3, hostel: 'Block B', room: '205', email: 'priya.patel@vitbhopal.ac.in', cgpa: 9.2 },
-  { regNo: '22BME2001', name: 'Rahul Verma', program: 'BTech Mech', year: 3, hostel: 'Block A', room: '310', email: 'rahul.verma@vitbhopal.ac.in', cgpa: 7.5 },
-  { regNo: '22BIT1023', name: 'Sneha Reddy', program: 'BTech IT', year: 3, hostel: 'Block C', room: '405', email: 'sneha.reddy@vitbhopal.ac.in', cgpa: 8.1 },
-  { regNo: '22BCE2005', name: 'Vikram Singh', program: 'BTech CSE', year: 3, hostel: 'Block B', room: '502', email: 'vikram.singh@vitbhopal.ac.in', cgpa: 6.8 },
-];
+import { DEMO_STUDENTS } from './auth';
 
 export class StudentPortal {
   constructor() {
@@ -14,47 +6,58 @@ export class StudentPortal {
     this.ticketHistory = [];
   }
 
-  login(regNo, dob) {
-    const student = MOCK_STUDENTS.find(s => s.regNo.toUpperCase() === regNo.toUpperCase());
+  /** Bind the authenticated student into the portal (auth.js is source of truth). */
+  setStudent(student, loggedInAt = Date.now()) {
+    if (!student) {
+      this.currentStudent = null;
+      return null;
+    }
+    this.currentStudent = { ...student, loggedInAt };
+    return this.currentStudent;
+  }
+
+  login(regNo, _pin) {
+    const student = DEMO_STUDENTS.find(s => s.regNo.toUpperCase() === String(regNo || '').toUpperCase());
     if (student) {
-      this.currentStudent = { ...student, loggedInAt: Date.now() };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.currentStudent));
-      return { success: true, student: this.currentStudent };
+      return { success: true, student: this.setStudent(student) };
     }
     return { success: false, error: 'Invalid registration number' };
   }
 
   logout() {
     this.currentStudent = null;
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  restoreSession() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) { this.currentStudent = JSON.parse(saved); return true; }
-    } catch (e) {}
-    return false;
+    this.ticketHistory = [];
   }
 
   isLoggedIn() {
     return this.currentStudent !== null;
   }
 
-  injectContext(slotState) {
+  /**
+   * Prefill slots from profile once intent is known.
+   * Pass activeIntent explicitly (string) or via slotState.activeIntent.
+   */
+  injectContext(slotState, intentOverride = null) {
     if (!this.currentStudent) return slotState;
     const s = this.currentStudent;
-    const injected = { ...slotState };
-    if (injected.activeIntent === 'MAINTENANCE_REQUEST') {
-      if (!injected.slots?.blockName) injected.slots = { ...injected.slots, blockName: s.hostel };
-      if (!injected.slots?.roomNumber) injected.slots = { ...injected.slots, roomNumber: s.room };
+    const intent = intentOverride || slotState.activeIntent;
+    const injected = {
+      ...slotState,
+      activeIntent: intent || slotState.activeIntent,
+      slots: { ...(slotState.slots || {}) },
+    };
+    if (!intent) return injected;
+
+    if (intent === 'MAINTENANCE_REQUEST') {
+      if (!injected.slots.blockName) injected.slots.blockName = s.hostel;
+      if (!injected.slots.roomNumber) injected.slots.roomNumber = s.room;
     }
-    if (injected.activeIntent === 'PASSWORD_RESET') {
-      if (!injected.slots?.studentID) injected.slots = { ...injected.slots, studentID: s.regNo };
-      if (!injected.slots?.registeredEmail) injected.slots = { ...injected.slots, registeredEmail: s.email };
+    if (intent === 'PASSWORD_RESET') {
+      if (!injected.slots.studentID) injected.slots.studentID = s.regNo;
+      if (!injected.slots.registeredEmail) injected.slots.registeredEmail = s.email;
     }
-    if (injected.activeIntent === 'SCHOLARSHIP_INQUIRY') {
-      if (!injected.slots?.cgpa) injected.slots = { ...injected.slots, cgpa: s.cgpa };
+    if (intent === 'SCHOLARSHIP_INQUIRY') {
+      if (injected.slots.cgpa === undefined) injected.slots.cgpa = s.cgpa;
     }
     return injected;
   }

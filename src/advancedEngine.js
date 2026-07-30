@@ -43,7 +43,7 @@ const VOTE_WEIGHTS = {
   financePolicy: { frustrated: 0.3, neutral: 0.2, positive: 0.4 }
 };
 
-export function runMultiAgentDebate(query, intent, sentiment, slots, config) {
+export function runMultiAgentDebate(query, intent, sentiment, _slots, _config) {
   const sentimentLabel = sentiment.label.toLowerCase();
   const debate = { agents: [], votes: [], finalDecision: null, consensus: 0 };
 
@@ -152,7 +152,7 @@ const EMOTION_STYLES = {
   }
 };
 
-export function generateEmotionAdaptiveResponse(baseReply, sentiment, intent) {
+export function generateEmotionAdaptiveResponse(baseReply, sentiment, _intent) {
   const style = EMOTION_STYLES[sentiment.label.toLowerCase()] || EMOTION_STYLES.neutral;
   const prefix = style.prefix[Math.floor(Math.random() * style.prefix.length)];
   const closing = style.closing[Math.floor(Math.random() * style.closing.length)];

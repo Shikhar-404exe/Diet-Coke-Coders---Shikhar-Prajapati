@@ -1,4 +1,4 @@
-import { pipeline } from '@xenova/transformers';
+import { pipeline } from '@huggingface/transformers';
 
 let extractor = null;
 
@@ -18,7 +18,9 @@ self.addEventListener('message', async (event) => {
   const { type, id, payload } = event.data;
   try {
     const ext = await getExtractor();
-    if (type === 'embed') {
+    if (type === 'init') {
+      self.postMessage({ type: 'ready', id });
+    } else if (type === 'embed') {
       const output = await ext(payload.texts, { pooling: 'mean', normalize: true });
       self.postMessage({ type: 'embed_result', id, payload: output.tolist() });
     } else if (type === 'embed_batch') {

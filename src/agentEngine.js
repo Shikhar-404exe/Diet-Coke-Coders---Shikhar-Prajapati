@@ -281,8 +281,6 @@ function buildResponse(agentResults, query, sentiment, slots, config) {
   const triageResult = agentResults.find(r => r.agent === 'triage');
   const retrieverResult = agentResults.find(r => r.agent === 'retriever');
   const slotResult = agentResults.find(r => r.agent === 'slot_filler');
-  const policyResult = agentResults.find(r => r.agent === 'policy');
-  const escalationResult = agentResults.find(r => r.agent === 'escalation');
 
   const intent = gatekeeperResult?.output?.intent || triageResult?.output?.intent;
 
@@ -409,7 +407,7 @@ function buildResponse(agentResults, query, sentiment, slots, config) {
   };
 }
 
-export async function processQueryAsync(query, chatHistory = [], slotState = {}, settings = {}, customDocumentsList = null, semanticSearcher = null, graphContext = null) {
+export async function processQueryAsync(query, chatHistory = [], slotState = {}, settings = {}, customDocumentsList = null, semanticSearcher = null, _graphContext = null) {
   const config = {
     ragThreshold: settings.ragThreshold !== undefined ? Number(settings.ragThreshold) : 0.40,
     sentimentBoost: settings.sentimentBoost !== false,
@@ -542,7 +540,7 @@ export function processQuery(query, chatHistory = [], slotState = {}, settings =
     return { reply: `Not eligible. ${failureReason}`, trace, newSlots: {}, action: 'REFUSAL' };
   }
 
-  if (matches.length > 0 && intent !== 'FEE_REFUND' && !(sentiment.label === 'Frustrated' && config.sentimentBoost)) {
+  if (matches.length > 0 && intent !== 'FEE_REFUND') {
     const bestMatch = matches[0];
     if (bestMatch.score >= config.ragThreshold) {
       return { reply: `${bestMatch.doc.content}\n\n[Source: ${bestMatch.doc.source}]`, trace, newSlots: {}, action: 'ANSWER' };

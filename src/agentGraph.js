@@ -46,7 +46,6 @@ class KnowledgeGraph {
   }
 
   addEdge(from, to, relation) {
-    const key = `${from}|${relation}|${to}`;
     if (!this.edges.find(e => e.from === from && e.to === to && e.relation === relation)) {
       this.edges.push({ from, to, relation });
       if (this.entities.has(from)) this.entities.get(from).connections.add(to);

@@ -22,8 +22,8 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['DM Sans', 'Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Outfit', 'system-ui', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
       }
     },
   },

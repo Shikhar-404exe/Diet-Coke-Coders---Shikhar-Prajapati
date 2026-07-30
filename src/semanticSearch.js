@@ -36,38 +36,62 @@ export class SemanticSearch {
     this.pending = new Map();
     this.requestId = 0;
     this.hybridAlpha = 0.7;
+    this.initialization = null;
   }
 
   async init() {
-    const restored = this._restoreIndex();
-    if (restored) {
-      this.ready = true;
-      return true;
+    if (this.initialization) return this.initialization;
+    this._restoreIndex();
+
+    try {
+      this.worker = new Worker(new URL('./embedder-worker.js', import.meta.url), { type: 'module' });
+    } catch {
+      this.ready = false;
+      return false;
     }
-    this.worker = new Worker(new URL('./embedder-worker.js', import.meta.url), { type: 'module' });
-    return new Promise((resolve) => {
-      const readyTimeout = setTimeout(() => { this.ready = true; resolve(true); }, 30000);
+
+    this.initialization = new Promise((resolve) => {
+      let settled = false;
+      const settle = (ready) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(readyTimeout);
+        this.ready = ready;
+        resolve(ready);
+      };
+      const readyTimeout = setTimeout(() => settle(false), 30000);
+
       this.worker.addEventListener('message', (event) => {
         const { type, id, payload } = event.data;
-        if (type === 'progress' && payload?.status === 'done') {
-          clearTimeout(readyTimeout);
-          this.ready = true;
-          resolve(true);
+        if (type === 'ready' && id === 'init') {
+          settle(true);
+          return;
+        }
+        if (type === 'error' && id === 'init') {
+          settle(false);
+          return;
         }
         const p = this.pending.get(id);
         if (!p) return;
-        this.pending.delete(id);
-        if (type === 'embed_result') p.resolve(payload);
-        else if (type === 'batch_progress') p.progress?.(payload);
-        else if (type === 'error') p.reject(new Error(payload));
+        if (type === 'embed_result') {
+          this.pending.delete(id);
+          p.resolve(payload);
+        } else if (type === 'batch_progress') {
+          p.progress?.(payload);
+        } else if (type === 'error') {
+          this.pending.delete(id);
+          p.reject(new Error(payload));
+        }
       });
-      this.worker.addEventListener('error', () => { clearTimeout(readyTimeout); this.ready = true; resolve(true); });
+      this.worker.addEventListener('error', () => settle(false));
+      this.worker.postMessage({ type: 'init', id: 'init' });
     });
+    return this.initialization;
   }
 
   _embed(texts) {
-    if (!this.worker) {
-      return Promise.reject(new Error('Worker not initialized'));
+    if (!this.worker || !this.ready) {
+      return Promise.reject(new Error('Semantic search is not ready'));
     }
     return new Promise((resolve, reject) => {
       const id = this.requestId++;
@@ -126,7 +150,7 @@ export class SemanticSearch {
       const data = this.index.map(({ vector, ...rest }) => ({ ...rest, vector }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       localStorage.setItem(STORAGE_VERSION_KEY, Date.now().toString());
-    } catch (e) {}
+    } catch {}
   }
 
   _restoreIndex() {
@@ -136,16 +160,17 @@ export class SemanticSearch {
       const data = JSON.parse(raw);
       if (!Array.isArray(data) || data.length === 0) return false;
       this.index = data;
-      this.ready = true;
       return true;
-    } catch (e) { return false; }
+    } catch { return false; }
   }
 
   getStatus() {
     return {
       ready: this.ready,
       documentCount: this.index.length,
-      cached: localStorage.getItem(STORAGE_KEY) !== null
+      cached: (() => {
+        try { return localStorage.getItem(STORAGE_KEY) !== null; } catch { return false; }
+      })()
     };
   }
 }
