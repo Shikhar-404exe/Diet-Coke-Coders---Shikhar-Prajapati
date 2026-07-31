@@ -1,11 +1,23 @@
 # Campus Helpdesk Triage Agent
 
-**Team:** Diet Coke Coders · **Lead:** Shikhar Prajapati  
-**Event:** [Summer of Codefest 2.0](https://github.com/Shikhar-404exe/Diet-Coke-Coders---Shikhar-Prajapati) — VIT Bhopal (Office of Students’ Welfare · GDSC / Innovators · iNSIGHTS · IIC)  
-**Track:** **Track 2 — AI Agent** (Generative AI · LLMs · Autonomous Systems · NLP)  
-**Problem statement:** Campus Helpdesk Triage Agent  
+**Team:** Diet Coke Coders · **Lead:** Shikhar Prajapati
+**Event:** [Summer of Codefest 2.0](https://github.com/Shikhar-404exe/Diet-Coke-Coders---Shikhar-Prajapati) — VIT Bhopal (Office of Students' Welfare · GDSC / Innovators · iNSIGHTS · IIC)
+**Track:** **Track 2 — AI Agent** (Generative AI · LLMs · Autonomous Systems · NLP)
+**Problem statement:** Campus Helpdesk Triage Agent
 
 > Campus staff spend time answering the same questions about forms, approvals, schedules, and procedures. Build an agent that answers routine questions from **approved sources**, gathers the **missing details**, and routes unresolved issues to the **right human team** — with retrieval, safe refusal, and a clean handoff. Strong solutions are **transparent, controllable, and grounded**, not a generic chatbot.
+
+---
+
+## Live demo
+
+| | |
+|---|---|
+| **URL** | [https://campus-triage-agent.vercel.app](https://campus-triage-agent.vercel.app) |
+| **Hosting** | Vercel (static build, frontend-only) |
+| **Agent mode** | Runs on the built-in offline rules engine — works standalone, no API key needed |
+
+Demo credentials: Student `22BCE1002` / PIN `vitb2026` · Ops `ops.admin` / `campusops`
 
 ---
 
@@ -49,7 +61,7 @@ Student message
 
 ---
 
-## What’s done (shipped)
+## What's done (shipped)
 
 ### Agent & backend
 - [x] Express API + SQLite (`server/`) — auth, tickets, documents, agent chat
@@ -76,21 +88,19 @@ Student message
 ### Stability / polish
 - [x] Page split (`StudentDashboard`, `AdminOpsPage`, `AdminKbPage`, `PlaygroundPage`)
 - [x] Error boundary (no full white screen on one view crash)
-- [x] Missing Lucide import crashes fixed
-- [x] Auto-scroll that doesn’t yank the whole page
+- [x] Auto-scroll that doesn't yank the whole page
 - [x] Mobile-friendly dash layouts + bottom nav
 
 ---
 
-## What’s left / next (not blockers for demo)
+## What's left / next (not blockers for demo)
 
 | Item | Status |
 |------|--------|
 | Real campus SSO / production auth | Not in scope for hackathon demo (demo PIN/staff passwords) |
-| Azure App Service + Azure SQL swap | Documented in `AZURE.md` — not required for local demo |
+| Production backend hosting (Express + SQLite on a persistent host) | Current live demo runs frontend-only on the offline rules fallback |
 | Stronger multilingual NLU beyond bilingual prompts | Partial (Hinglish works; deep i18n UI not done) |
 | Full unit/e2e CI suite | Light API harness (`scripts/deep-test-api.mjs`); expand later |
-| Wire unused `CampusAppContext` | Pages still receive `app` bag props (works; cleanup optional) |
 | Semantic / GraphRAG extras | Present for Trace/demo depth; core path is FTS + LLM |
 | Production OpenRouter paid models | Intentionally `:free` only for Track 2 cost/safety |
 
@@ -121,7 +131,16 @@ npm install
 npm run dev            # http://localhost:5173  (proxies /auth /agent /tickets /documents /health)
 ```
 
-### Demo logins
+### 3) Deploy to Vercel (frontend only)
+
+```bash
+npm run build          # → dist/
+vercel --prod          # static deploy; app falls back to offline rules engine
+```
+
+---
+
+## Demo logins
 
 | Portal | ID | Secret |
 |--------|----|--------|
@@ -130,12 +149,10 @@ npm run dev            # http://localhost:5173  (proxies /auth /agent /tickets /
 
 ### Judge path (~6 min)
 
-1. Student → **Judge demo** (or Wi‑Fi ask) → **Grounded Answer** + View Source  
-2. “Write my Python homework” → **Safe Refusal**  
-3. Hostel fan/light broken → **Confirm file ticket** → My Requests + QR/photo  
-4. Ops → claim → note → resolve  
-
-More: [DEMO.md](./DEMO.md) · Track notes: [TRACK2.md](./TRACK2.md)
+1. Student → **Judge demo** (or Wi‑Fi ask) → **Grounded Answer** + View Source
+2. "Write my Python homework" → **Safe Refusal**
+3. Hostel fan/light broken → **Confirm file ticket** → My Requests + QR/photo
+4. Ops → claim → note → resolve
 
 ---
 
@@ -170,7 +187,6 @@ campus_triage_agent/
 │   │   └── directory.js      # intent → department
 │   └── src/db/               # SQLite schema + seed
 ├── scripts/deep-test-api.mjs # Smoke: auth, ANSWER/REFUSAL/handoff, RBAC
-├── PRODUCT.md / DESIGN.md    # Product + visual system
 └── vite.config.js            # Dev proxy to :8787
 ```
 
@@ -188,9 +204,10 @@ campus_triage_agent/
 | Layer | Choice |
 |-------|--------|
 | UI | React 19, Vite 8, Tailwind, Lucide, ECharts |
-| API | Node Express, SQLite (`node:sqlite` / better-sqlite path in server) |
+| API | Node Express, SQLite (`node:sqlite`) |
 | LLM | OpenRouter **free** models only (`:free`) |
 | Embeddings (optional depth) | Transformers.js / Voy in client for semantic extras |
+| Deployment | Vercel (static frontend) |
 
 ---
 
@@ -199,19 +216,6 @@ campus_triage_agent/
 - API keys live **only** in `server/.env` (gitignored). Never commit keys.
 - Demo passwords are for the hackathon judges only — not production SSO.
 - Rotate any key that was ever pasted into chat.
-
----
-
-## Hackathon roadmap reminder (event rules)
-
-From Summer of Codefest 2.0 tracks / problem statements:
-
-1. Each team picks **one** problem statement from **one** of the five tracks.  
-2. Problem statement **cannot** change in Round 2 if selected.  
-3. **No** track switching for Round 2.  
-4. Submit the solution PPT via the event link after choosing the PS.
-
-**Our choice:** Track 2 · **Campus Helpdesk Triage Agent**.
 
 ---
 
